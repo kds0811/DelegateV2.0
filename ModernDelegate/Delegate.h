@@ -2,29 +2,32 @@
 #include <functional>
 #include <vector>
 
-
-
-
+template <typename ... CallBackArgs>
 class Delegate
 {
-	using CallBack = std::function<void()>;
-	std::vector<CallBack> mCallBacks;
+	using CallBackFunction = void(*)(CallBackArgs ...);
+	using CallBackVec = std::vector<CallBackFunction>;
+
+	CallBackVec mCallBacksVec{};
 
 public:
 	Delegate() = default;
 
-	void Add(const CallBack& func)
+	void Add(const CallBackFunction& func)
 	{
-		mCallBacks.push_back(func);
+		mCallBacksVec.push_back(func);
 	}
 
-	void Invoke()
+
+	void InvokeAll(CallBackArgs ... args)
 	{
-		for (auto& f : mCallBacks)
+		for (auto& f : mCallBacksVec)
 		{
-			f();
+			std::invoke(f , args ...);
 		}
 	}
+
+	
 };
 
 
