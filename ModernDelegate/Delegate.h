@@ -9,13 +9,11 @@ public:
 	virtual ~IDelegate() = default;
 };
 
-
-
 template <typename ... CallBackArgs>
 class Delegate : public IDelegate
 {
 public:
-	using CallBackFunction = void(*)(CallBackArgs ...);
+	using CallBackFunction = std::function<void(CallBackArgs ...)>;
 	using CallBackVec = std::vector<CallBackFunction>;
 	
 private:
@@ -29,6 +27,13 @@ public:
 		mCallBacksVec.push_back(func);
 	}
 
+	template <typename T>
+	void Add(T* obj, void (T::* method)(CallBackArgs...))
+	{
+		mCallBacksVec.push_back([obj, method](CallBackArgs... args) {
+			(obj->*method)(args...);
+			});
+	}
 
 	void InvokeAll(CallBackArgs ... args)
 	{
@@ -38,7 +43,6 @@ public:
 		}
 	}
 
-	
 };
 
 

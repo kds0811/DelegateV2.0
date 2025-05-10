@@ -2,20 +2,33 @@
 #include "gtest/gtest.h"
 #include "EventManager.h"
 
-void Function1(int a)
+class F1
 {
-	std::cout << a << "\n";
-}
+public:
+	void Function(float a, float b)
+	{
+		std::cout << a + b + 0.5f << "\n";
+	}
+};
 
-void FunctionAdd10(int a)
+class F2
 {
-	std::cout << a + 10 << "\n";
-}
+public:
+	void Function(float a, float b)
+	{
+		std::cout << a + b + 1.5f << "\n";
+	}
+};
 
-void FunctionAdd20(int a)
+class F3
 {
-	std::cout << a + 20 << "\n";
-}
+public:
+	void Function(float a, float b)
+	{
+		std::cout << a + b + 2.5f << "\n";
+	}
+};
+
 
 void Function1(int a, int b)
 {
@@ -37,12 +50,20 @@ int main()
 	EventManager eventmanager;
 
 	eventmanager.CreateEvent<int, int>("update");
+	eventmanager.AttachToEvent("update", Function1);
+	eventmanager.AttachToEvent("update", FunctionAdd10);
+	eventmanager.AttachToEvent("update", FunctionAdd20);
+	eventmanager.CallAllEventSubscribes("update", 3, 5);
 
-	eventmanager.AttachToEvent<int, int>("update", Function1);
-	eventmanager.AttachToEvent<int, int>("update", FunctionAdd10);
-	eventmanager.AttachToEvent<int, int>("update", FunctionAdd20);
+	F1 f1;
+	F2 f2;
+	F3 f3;
 
-	eventmanager.CallAllEventSubscribes<int, int>("update", 3, 5);
+	eventmanager.CreateEvent<float, float>("methods");
+	eventmanager.AttachToEvent("methods", &f1, &F1::Function);
+	eventmanager.AttachToEvent("methods", &f2, &F2::Function);
+	eventmanager.AttachToEvent("methods", &f3, &F3::Function);
+	eventmanager.CallAllEventSubscribes("methods", 0.5f, 1.0f);
 
 	return 0;
 }

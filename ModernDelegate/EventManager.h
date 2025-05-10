@@ -33,6 +33,16 @@ public:
 		}
 	}
 
+	template <typename T, typename... CallbackArgs>
+	void AttachToEvent(const std::string& nameEvent, T* obj, void (T::* method)(CallbackArgs...))
+	{
+		if (mEventMap.contains(nameEvent))
+		{
+			auto delegate = static_cast<Delegate<CallbackArgs...>*>(mEventMap.at(nameEvent).get());
+			delegate->Add(obj, method);
+		}
+	}
+
 	template<typename ... CallbackArgs>
 	void CallAllEventSubscribes(const std::string& nameEvent, CallbackArgs ... args)
 	{
