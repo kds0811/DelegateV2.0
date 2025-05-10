@@ -1,6 +1,6 @@
 #include <iostream>
-#include "Delegate.h"
 #include "gtest/gtest.h"
+#include "EventManager.h"
 
 void Function1(int a)
 {
@@ -34,19 +34,15 @@ void FunctionAdd20(int a, int b)
 
 int main()
 {
-	Delegate<int> delint;
-	delint.Add(Function1);
-	delint.Add(FunctionAdd10);
-	delint.Add(FunctionAdd20);
-	delint.InvokeAll(1);
+	EventManager eventmanager;
 
-	Delegate<int, int> DelIntInt;
-	DelIntInt.Add(Function1);
-	DelIntInt.Add(FunctionAdd10);
-	DelIntInt.Add(FunctionAdd20);
-	DelIntInt.InvokeAll(1, 2);
-	DelIntInt.InvokeAll(3, 7);
-	DelIntInt.InvokeAll(66, 99);
+	eventmanager.CreateEvent<int, int>("update");
+
+	eventmanager.AttachToEvent<int, int>("update", Function1);
+	eventmanager.AttachToEvent<int, int>("update", FunctionAdd10);
+	eventmanager.AttachToEvent<int, int>("update", FunctionAdd20);
+
+	eventmanager.CallAllEventSubscribes<int, int>("update", 3, 5);
 
 	return 0;
 }

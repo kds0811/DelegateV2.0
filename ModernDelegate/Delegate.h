@@ -2,12 +2,23 @@
 #include <functional>
 #include <vector>
 
-template <typename ... CallBackArgs>
-class Delegate
+class IDelegate
 {
+public:
+	IDelegate() = default;
+	virtual ~IDelegate() = default;
+};
+
+
+
+template <typename ... CallBackArgs>
+class Delegate : public IDelegate
+{
+public:
 	using CallBackFunction = void(*)(CallBackArgs ...);
 	using CallBackVec = std::vector<CallBackFunction>;
-
+	
+private:
 	CallBackVec mCallBacksVec{};
 
 public:
