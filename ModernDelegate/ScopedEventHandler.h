@@ -2,58 +2,90 @@
 #include <optional>
 #include "EventManager.h"
 
-
 class ScopedEventHandler
 {
 	std::optional<size_t> mCallBackID{};
 	std::string mEventName{};
 public:
-
 	template<typename ... CallbackArgs>
-	explicit ScopedEventHandler(const std::string& eventName, void(*func)(CallbackArgs ...))
-		:
-		mEventName(eventName)
-	{
-		auto eventManager = EventManager::GetEventManager();
-		if (eventManager)
-		{
-			mCallBackID = eventManager->AttachToEvent(mEventName, func);
-		}
-	}
+	explicit ScopedEventHandler(const std::string& eventName, void(*func)(CallbackArgs ...));
 
 	template <typename T, typename... CallbackArgs>
-	explicit ScopedEventHandler(const std::string& eventName, T* obj, void (T::* method)(CallbackArgs...))
-		:
-		mEventName(eventName)
-	{
-		auto eventManager = EventManager::GetEventManager();
-		if (eventManager)
-		{
-			mCallBackID = eventManager->AttachToEvent(mEventName, obj, method);
-		}
-	}
+	explicit ScopedEventHandler(const std::string& eventName, T* obj, void (T::* method)(CallbackArgs...));
 
-	void Detach()
-	{
-		auto eventManager = EventManager::GetEventManager();
-		if (eventManager)
-		{
-			eventManager->DetachFromEvent(mEventName, mCallBackID.value());
-			mEventName = "";
-			mCallBackID = std::nullopt;
-		}
-	}
+	inline void Detach();
 
-	[[nodiscard]] bool IsInitialized() const
-	{
-		return mCallBackID.has_value();
-	}
+	[[nodiscard]] inline bool IsInitialized() const;
 
-	~ScopedEventHandler()
-	{
-		if (IsInitialized())
-		{
-			Detach();
-		}
-	}
+	inline ~ScopedEventHandler();
+
+private:
+	template<typename ... CallbackArgs>
+	void Attach(const std::string& eventName, void(*func)(CallbackArgs ...));
+
+	template<typename T, typename... CallbackArgs>
+	void Attach(const std::string& eventName, T* obj, void (T::* method)(CallbackArgs...));
 };
+
+
+inline void ScopedEventHandler::Detach()
+{
+	if (!IsInitialized()) return;
+
+	auto eventManager = EventManager::GetEventManager();
+	if (eventManager)
+	{
+		eventManager->DetachFromEvent(mEventName, mCallBackID.value());
+		mEventName = "";
+		mCallBackID = std::nullopt;
+	}
+}
+
+inline bool ScopedEventHandler::IsInitialized() const
+{
+	return mCallBackID.has_value();
+}
+
+template<typename ...CallbackArgs>
+inline ScopedEventHandler::ScopedEventHandler(const std::string& eventName, void(*func)(CallbackArgs...))
+	:
+	mEventName(eventName)
+{
+	Attach(mEventName, func);
+}
+
+template<typename T, typename ...CallbackArgs>
+inline ScopedEventHandler::ScopedEventHandler(const std::string& eventName, T* obj, void(T::* method)(CallbackArgs...))
+	:
+	mEventName(eventName)
+{
+	Attach(mEventName, obj, method);
+}
+
+template<typename ...CallbackArgs>
+inline void ScopedEventHandler::Attach(const std::string& eventName, void(*func)(CallbackArgs...))
+{
+	auto eventManager = EventManager::GetEventManager();
+	if (eventManager)
+	{
+		mCallBackID = eventManager->AttachToEvent(eventName, func);
+	}
+}
+
+template<typename T, typename ...CallbackArgs>
+inline void ScopedEventHandler::Attach(const std::string& eventName, T* obj, void(T::* method)(CallbackArgs...))
+{
+	auto eventManager = EventManager::GetEventManager();
+	if (eventManager)
+	{
+		mCallBackID = eventManager->AttachToEvent(eventName, obj, method);
+	}
+}
+
+inline ScopedEventHandler::~ScopedEventHandler()
+{
+	if (IsInitialized())
+	{
+		Detach();
+	}
+}
