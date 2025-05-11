@@ -35,7 +35,7 @@ public:
 
 
 	template<typename ... CallbackArgs>
-	[[nodiscard]] std::optional<bool> EventIsEmpty(const std::string& nameEvent);
+	[[nodiscard]] std::optional<bool> IsEventEmpty(const std::string& nameEvent);
 
 
 private:
@@ -95,13 +95,10 @@ inline void EventManager::DetachFromEvent(const std::string& nameEvent, size_t c
 template<typename ...CallbackArgs>
 inline void EventManager::InvokeAllSubscribers(const std::string& nameEvent, CallbackArgs && ...args)
 {
-	if (HasEvent(nameEvent))
+	auto delegate = GetDelegate<CallbackArgs...>(nameEvent);
+	if (delegate && !delegate->IsEmpty())
 	{
-		auto delegate = GetDelegate<CallbackArgs...>(nameEvent);
-		if (delegate && !delegate->IsEmpty())
-		{
-			delegate->InvokeAll(std::forward<CallbackArgs>(args)...);
-		}
+		delegate->InvokeAll(std::forward<CallbackArgs>(args)...);
 	}
 }
 
@@ -116,7 +113,7 @@ inline void EventManager::ClearEvent(const std::string& nameEvent)
 }
 
 template<typename ...CallbackArgs>
-inline std::optional<bool> EventManager::EventIsEmpty(const std::string& nameEvent)
+inline std::optional<bool> EventManager::IsEventEmpty(const std::string& nameEvent)
 {
 	auto delegate = GetDelegate<CallbackArgs...>(nameEvent);
 	if (delegate)
