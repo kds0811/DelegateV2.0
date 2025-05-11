@@ -21,12 +21,24 @@ public:
 
 private:
 	template<typename ... CallbackArgs>
-	void Attach(const std::string& eventName, void(*func)(CallbackArgs ...));
-
-	template<typename T, typename... CallbackArgs>
-	void Attach(const std::string& eventName, T* obj, void (T::* method)(CallbackArgs...));
+	void Attach(const std::string& eventName, CallbackArgs&&... args);
 };
 
+template<typename ...CallbackArgs>
+inline ScopedEventHandler::ScopedEventHandler(const std::string& eventName, void(*func)(CallbackArgs...))
+	:
+	mEventName(eventName)
+{
+	Attach(mEventName, func);
+}
+
+template<typename T, typename ...CallbackArgs>
+inline ScopedEventHandler::ScopedEventHandler(const std::string& eventName, T* obj, void(T::* method)(CallbackArgs...))
+	:
+	mEventName(eventName)
+{
+	Attach(mEventName, obj, method);
+}
 
 inline void ScopedEventHandler::Detach()
 {
@@ -47,38 +59,12 @@ inline bool ScopedEventHandler::IsInitialized() const
 }
 
 template<typename ...CallbackArgs>
-inline ScopedEventHandler::ScopedEventHandler(const std::string& eventName, void(*func)(CallbackArgs...))
-	:
-	mEventName(eventName)
-{
-	Attach(mEventName, func);
-}
-
-template<typename T, typename ...CallbackArgs>
-inline ScopedEventHandler::ScopedEventHandler(const std::string& eventName, T* obj, void(T::* method)(CallbackArgs...))
-	:
-	mEventName(eventName)
-{
-	Attach(mEventName, obj, method);
-}
-
-template<typename ...CallbackArgs>
-inline void ScopedEventHandler::Attach(const std::string& eventName, void(*func)(CallbackArgs...))
+inline void ScopedEventHandler::Attach(const std::string& eventName, CallbackArgs && ...args)
 {
 	auto eventManager = EventManager::GetEventManager();
 	if (eventManager)
 	{
-		mCallBackID = eventManager->AttachToEvent(eventName, func);
-	}
-}
-
-template<typename T, typename ...CallbackArgs>
-inline void ScopedEventHandler::Attach(const std::string& eventName, T* obj, void(T::* method)(CallbackArgs...))
-{
-	auto eventManager = EventManager::GetEventManager();
-	if (eventManager)
-	{
-		mCallBackID = eventManager->AttachToEvent(eventName, obj, method);
+		mCallBackID = eventManager->AttachToEvent(eventName, std::forward<CallbackArgs>(args)...);
 	}
 }
 
