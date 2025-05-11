@@ -10,7 +10,6 @@ class EventManager
 	EventMap mEventMap;
 
 public:
-
 	template<typename ... CallbackArgs>
 	void CreateEvent(const std::string& nameEvent)
 	{
@@ -46,9 +45,14 @@ public:
 		return 0;
 	}
 
+	template<typename ... CallbackArgs>
 	void DetachFromEvent(const std::string& nameEvent, size_t callBackID)
 	{
-
+		if (CheckEventContains(nameEvent))
+		{
+			auto delegate = static_cast<Delegate<CallbackArgs...>*>(mEventMap.at(nameEvent).get());
+			delegate->Detach(callBackID);
+		}
 	}
 
 	template<typename ... CallbackArgs>
@@ -61,7 +65,6 @@ public:
 		}
 	}
 
-
 private:
 	bool CheckEventContains(const std::string& nameEvent)
 	{
@@ -72,5 +75,4 @@ private:
 		}
 		return true;
 	}
-
 };
