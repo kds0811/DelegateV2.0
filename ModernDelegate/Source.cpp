@@ -98,5 +98,7 @@ int main()
 	eventmanager.CallAllEventSubscribes("incrementCount");
 	eventmanager.CallAllEventSubscribes("incrementCount");
 	eventmanager.CallAllEventSubscribes("printCount");
+
+
 	return 0;
 }
