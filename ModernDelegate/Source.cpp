@@ -1,6 +1,7 @@
 #include <iostream>
 #include "gtest/gtest.h"
 #include "EventManager.h"
+#include "ScopedEventHandler.h"
 
 class F1
 {
@@ -28,7 +29,6 @@ public:
 		std::cout << a + b + 2.5f << "\n";
 	}
 };
-
 
 class F4
 {
@@ -61,47 +61,48 @@ void FunctionAdd20(int a, int b)
 
 int main()
 {
-	EventManager eventmanager;
+	EventManager*  pEventmanager = EventManager::GetEventManager();
 
-	eventmanager.CreateEvent<int, int>("update");
-	auto result1 = eventmanager.AttachToEvent("update", Function1);
-	auto result2 = eventmanager.AttachToEvent("update", FunctionAdd10);
-	auto result3 = eventmanager.AttachToEvent("update", FunctionAdd20);
-	eventmanager.InvokeAllSubscribers("update", 3, 5);
+	pEventmanager->CreateEvent<int, int>("update");
+	ScopedEventHandler sch1("update", Function1);
+	ScopedEventHandler sch2("update", FunctionAdd10);
+	ScopedEventHandler sch3("update", FunctionAdd20);
+	pEventmanager->InvokeAllEventSubscribers("update", 3, 5);
 
 	F1 f1;
 	F2 f2;
 	F3 f3;
 
-	eventmanager.CreateEvent<float, float>("methods");
-	auto result5 = eventmanager.AttachToEvent("methods", &f1, &F1::Function);
-	auto result6 = eventmanager.AttachToEvent("methods", &f2, &F2::Function);
-	auto result7 = eventmanager.AttachToEvent("methods", &f3, &F3::Function);
-	eventmanager.InvokeAllSubscribers("methods", 0.1f, 0.1f);
+	pEventmanager->CreateEvent<float, float>("methods");
+	ScopedEventHandler sch4("methods", &f1, &F1::Function);
+	ScopedEventHandler sch5("methods", &f2, &F2::Function);
+	ScopedEventHandler sch6("methods", &f3, &F3::Function);
+
+	pEventmanager->InvokeAllEventSubscribers("methods", 0.1f, 0.1f);
 
 	F4 f41;
 	F4 f42;
 	F4 f43;
 	F4 f44;
 	F4 f45;
-	eventmanager.CreateEvent("incrementCount");
-	auto id1 = eventmanager.AttachToEvent("incrementCount", &f41, &F4::incrementCount);
-	auto id2 = eventmanager.AttachToEvent("incrementCount", &f42, &F4::incrementCount);
-	auto id3 = eventmanager.AttachToEvent("incrementCount", &f43, &F4::incrementCount);
-	auto id4 = eventmanager.AttachToEvent("incrementCount", &f44, &F4::incrementCount);
-	auto id5 = eventmanager.AttachToEvent("incrementCount", &f45, &F4::incrementCount);
 
-	eventmanager.InvokeAllSubscribers("incrementCount");
-	eventmanager.DetachFromEvent("incrementCount", id1.value());
-	eventmanager.InvokeAllSubscribers("incrementCount");
-	eventmanager.InvokeAllSubscribers("incrementCount");
-	eventmanager.InvokeAllSubscribers("incrementCount");
-	eventmanager.ClearEvent("incrementCount");
-	eventmanager.InvokeAllSubscribers("incrementCount");
+	pEventmanager->CreateEvent("incrementCount");
+	ScopedEventHandler sch7("incrementCount", &f41, &F4::incrementCount);
+	ScopedEventHandler sch8("incrementCount", &f42, &F4::incrementCount);
+	ScopedEventHandler sch9("incrementCount", &f43, &F4::incrementCount);
+	ScopedEventHandler sch10("incrementCount", &f44, &F4::incrementCount);
+	ScopedEventHandler sch11("incrementCount", &f45, &F4::incrementCount);
 
-	eventmanager.CreateEvent("printCount");
-	auto result8 = eventmanager.AttachToEvent("printCount", &f41, &F4::PrintCount);
-	eventmanager.InvokeAllSubscribers("printCount");
+	pEventmanager->InvokeAllEventSubscribers("incrementCount");
+	sch8.Detach();
+	pEventmanager->InvokeAllEventSubscribers("incrementCount");
+	pEventmanager->InvokeAllEventSubscribers("incrementCount");
+	pEventmanager->InvokeAllEventSubscribers("incrementCount");
+	pEventmanager->InvokeAllEventSubscribers("incrementCount");
+
+	pEventmanager->CreateEvent("printCount");
+	ScopedEventHandler sch12("printCount", &f41, &F4::PrintCount);
+	pEventmanager->InvokeAllEventSubscribers("printCount");
 
 
 	return 0;

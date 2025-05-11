@@ -1,6 +1,5 @@
 #pragma once
 #include <functional>
-#include <vector>
 #include <unordered_map>
 
 class IDelegate
@@ -69,5 +68,3 @@ private:
 		return mID++;
 	}
 };
-
-

@@ -134,6 +134,7 @@
   <ItemGroup>
     <ClInclude Include="Delegate.h" />
     <ClInclude Include="EventManager.h" />
+    <ClInclude Include="ScopedEventHandler.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
