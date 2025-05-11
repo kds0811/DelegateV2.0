@@ -52,6 +52,17 @@ public:
 			std::invoke(func, std::forward<CallBackArgs>(args)...);
 		}
 	}
+
+	void Clear()
+	{
+		mCallBackMap.clear();
+	}
+
+	bool IsEmpty()
+	{
+		return mCallBackMap.empty();
+	}
+
 private:
 	size_t GetID()
 	{

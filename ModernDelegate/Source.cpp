@@ -64,9 +64,9 @@ int main()
 	EventManager eventmanager;
 
 	eventmanager.CreateEvent<int, int>("update");
-	eventmanager.AttachToEvent("update", Function1);
-	eventmanager.AttachToEvent("update", FunctionAdd10);
-	eventmanager.AttachToEvent("update", FunctionAdd20);
+	auto result1 = eventmanager.AttachToEvent("update", Function1);
+	auto result2 = eventmanager.AttachToEvent("update", FunctionAdd10);
+	auto result3 = eventmanager.AttachToEvent("update", FunctionAdd20);
 	eventmanager.CallAllEventSubscribes("update", 3, 5);
 
 	F1 f1;
@@ -74,9 +74,9 @@ int main()
 	F3 f3;
 
 	eventmanager.CreateEvent<float, float>("methods");
-	eventmanager.AttachToEvent("methods", &f1, &F1::Function);
-	eventmanager.AttachToEvent("methods", &f2, &F2::Function);
-	eventmanager.AttachToEvent("methods", &f3, &F3::Function);
+	auto result5 = eventmanager.AttachToEvent("methods", &f1, &F1::Function);
+	auto result6 = eventmanager.AttachToEvent("methods", &f2, &F2::Function);
+	auto result7 = eventmanager.AttachToEvent("methods", &f3, &F3::Function);
 	eventmanager.CallAllEventSubscribes("methods", 0.1f, 0.1f);
 
 	F4 f41;
@@ -85,23 +85,22 @@ int main()
 	F4 f44;
 	F4 f45;
 	eventmanager.CreateEvent("incrementCount");
-	size_t id1 = eventmanager.AttachToEvent("incrementCount", &f41, &F4::incrementCount);
-	size_t id2 = eventmanager.AttachToEvent("incrementCount", &f42, &F4::incrementCount);
-	size_t id3 = eventmanager.AttachToEvent("incrementCount", &f43, &F4::incrementCount);
-	size_t id4 = eventmanager.AttachToEvent("incrementCount", &f44, &F4::incrementCount);
-	size_t id5 = eventmanager.AttachToEvent("incrementCount", &f45, &F4::incrementCount);
+	auto id1 = eventmanager.AttachToEvent("incrementCount", &f41, &F4::incrementCount);
+	auto id2 = eventmanager.AttachToEvent("incrementCount", &f42, &F4::incrementCount);
+	auto id3 = eventmanager.AttachToEvent("incrementCount", &f43, &F4::incrementCount);
+	auto id4 = eventmanager.AttachToEvent("incrementCount", &f44, &F4::incrementCount);
+	auto id5 = eventmanager.AttachToEvent("incrementCount", &f45, &F4::incrementCount);
 
 	eventmanager.CallAllEventSubscribes("incrementCount");
-	eventmanager.DetachFromEvent("incrementCount", id1);
-	eventmanager.DetachFromEvent("incrementCount", id1);
+	eventmanager.DetachFromEvent("incrementCount", id1.value());
 	eventmanager.CallAllEventSubscribes("incrementCount");
 	eventmanager.CallAllEventSubscribes("incrementCount");
 	eventmanager.CallAllEventSubscribes("incrementCount");
-	eventmanager.DetachFromEvent("incrementCount", id5);
+	eventmanager.ClearEvent("incrementCount");
 	eventmanager.CallAllEventSubscribes("incrementCount");
 
 	eventmanager.CreateEvent("printCount");
-	eventmanager.AttachToEvent("printCount", &f41, &F4::PrintCount);
+	auto result8 = eventmanager.AttachToEvent("printCount", &f41, &F4::PrintCount);
 	eventmanager.CallAllEventSubscribes("printCount");
 
 
