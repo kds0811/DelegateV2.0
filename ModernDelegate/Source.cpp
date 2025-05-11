@@ -59,9 +59,33 @@ void FunctionAdd20(int a, int b)
 	std::cout << a + b + 20 << "\n";
 }
 
+struct Point
+{
+	double x = 1.0;
+	double y = 2.0;
+};
+
+class Printer
+{
+	std::string n = " n ";
+public:
+	static void Print(Point a)
+	{
+		std::cout << "X " << a.x << "\n";
+		std::cout << "Y " << a.y << "\n";
+	}
+
+	void nonStaticPrint(Point a)
+	{
+		std::cout << "X " + n << a.x  << "\n";
+		std::cout << "Y " + n << a.y << "\n";
+	}
+
+};
+
 int main()
 {
-	EventManager*  pEventmanager = EventManager::GetEventManager();
+	EventManager* pEventmanager = EventManager::GetEventManager();
 
 	pEventmanager->CreateEvent<int, int>("update");
 	ScopedEventHandler sch1("update", Function1);
@@ -104,6 +128,42 @@ int main()
 	ScopedEventHandler sch12("printCount", &f41, &F4::PrintCount);
 	pEventmanager->InvokeAllEventSubscribers("printCount");
 
+	pEventmanager->InvokeAllEventSubscribers("incrementCount");
+	pEventmanager->InvokeAllEventSubscribers("printCount");
+
+	pEventmanager->ClearEvent("incrementCount");
+	pEventmanager->InvokeAllEventSubscribers("incrementCount");
+	pEventmanager->InvokeAllEventSubscribers("printCount");
+
+
+	std::cout << pEventmanager->IsEventEmpty("incrementCount").value() << "\n";
+
+	ScopedEventHandler sch13("incrementCount", &f44, &F4::incrementCount);
+	{
+		ScopedEventHandler sch14("incrementCount", &f44, &F4::incrementCount);
+		ScopedEventHandler sch15("incrementCount", &f45, &F4::incrementCount);
+		pEventmanager->InvokeAllEventSubscribers("incrementCount");
+		pEventmanager->InvokeAllEventSubscribers("printCount");
+	}
+
+	pEventmanager->InvokeAllEventSubscribers("incrementCount");
+	pEventmanager->InvokeAllEventSubscribers("printCount");
+
+	pEventmanager->CreateEvent<Point>("point");
+
+	Point a;
+	Point b{ 1213.0545454554f, -1515.5555f };
+	Point c{ 3.0055, 5.0066 };
+	Printer pr;
+	ScopedEventHandler sch16("point", &Printer::Print);
+	pEventmanager->InvokeAllEventSubscribers("point", a);
+	pEventmanager->InvokeAllEventSubscribers("point", b);
+	pEventmanager->InvokeAllEventSubscribers("point", c);
+	pEventmanager->ClearEvent("point");
+	ScopedEventHandler sch17("point", &pr, &Printer::nonStaticPrint);
+	pEventmanager->InvokeAllEventSubscribers("point", a);
+	pEventmanager->InvokeAllEventSubscribers("point", b);
+	pEventmanager->InvokeAllEventSubscribers("point", c);
 
 	return 0;
 }
