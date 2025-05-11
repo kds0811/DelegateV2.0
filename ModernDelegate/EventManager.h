@@ -31,7 +31,7 @@ public:
 		if (CheckEventContains(nameEvent))
 		{
 			auto delegate = static_cast<Delegate<CallbackArgs ...>*>(mEventMap.at(nameEvent).get());
-			delegate->Add(func);
+			delegate->Attach(func);
 		}
 	}
 
@@ -41,7 +41,7 @@ public:
 		if (CheckEventContains(nameEvent))
 		{
 			auto delegate = static_cast<Delegate<CallbackArgs...>*>(mEventMap.at(nameEvent).get());
-			delegate->Add(obj, method);
+			delegate->Attach(obj, method);
 		}
 	}
 

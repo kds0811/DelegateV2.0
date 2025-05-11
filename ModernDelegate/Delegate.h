@@ -1,6 +1,7 @@
 #pragma once
 #include <functional>
 #include <vector>
+#include <unordered_map>
 
 class IDelegate
 {
@@ -13,34 +14,41 @@ template <typename ... CallBackArgs>
 class Delegate : public IDelegate
 {
 public:
+	using typeID = size_t;
 	using CallBackFunction = std::function<void(CallBackArgs ...)>;
-	using CallBackVec = std::vector<CallBackFunction>;
-	
+	using CallBackMap = std::unordered_map<typeID, CallBackFunction>;
+
 private:
-	CallBackVec mCallBacksVec{};
+	CallBackMap mCallBackMap{};
+	typeID mID = 0;
 
 public:
 	Delegate() = default;
 
-	void Add(const CallBackFunction& func)
+	void Attach(const CallBackFunction& func)
 	{
-		mCallBacksVec.push_back(func);
+		mCallBackMap[GetID()] = func;
 	}
 
 	template <typename T>
-	void Add(T* obj, void (T::* method)(CallBackArgs...))
+	void Attach(T* obj, void (T::* method)(CallBackArgs...))
 	{
-		mCallBacksVec.push_back([obj, method](CallBackArgs... args) {
-			(obj->*method)(std::forward<CallBackArgs>(args) ...);
-			});
+		mCallBackMap[GetID()] = [obj, method](CallBackArgs... args) {
+			(obj->*method)(std::forward<CallBackArgs>(args) ...); };
 	}
 
+	template <typename ... CallbackArgs>
 	void InvokeAll(CallBackArgs&& ... args)
 	{
-		for (auto& f : mCallBacksVec)
+		for (const auto& [id, func] : mCallBackMap)
 		{
-			std::invoke(f , std::forward<CallBackArgs>(args) ...);
+			std::invoke(func, std::forward<CallBackArgs>(args)...);
 		}
+	}
+private:
+	typeID GetID()
+	{
+		return mID++;
 	}
 };
 
