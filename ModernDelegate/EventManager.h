@@ -46,7 +46,7 @@ public:
 	}
 
 	template<typename ... CallbackArgs>
-	void CallAllEventSubscribes(const std::string& nameEvent, CallbackArgs ... args)
+	void CallAllEventSubscribes(const std::string& nameEvent, CallbackArgs&& ... args)
 	{
 		if (CheckEventContains(nameEvent))
 		{
