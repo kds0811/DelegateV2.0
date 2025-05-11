@@ -27,7 +27,7 @@ public:
 
 
 	template<typename ... CallbackArgs>
-	void CallAllEventSubscribes(const std::string& nameEvent, CallbackArgs&& ... args);
+	void InvokeAllSubscribers(const std::string& nameEvent, CallbackArgs&& ... args);
 
 
 	template<typename ... CallbackArgs>
@@ -39,14 +39,18 @@ public:
 
 
 private:
-	[[nodiscard]] inline bool CheckEventContains(const std::string& nameEvent);
+	[[nodiscard]] inline bool HasEvent(const std::string& nameEvent);
+
+	template<typename ...CallbackArgs>
+	[[nodiscard]] Delegate<CallbackArgs...>* GetDelegate(const std::string& nameEvent);
+
 
 };
 
 template<typename ...CallbackArgs>
 inline void EventManager::CreateEvent(const std::string& nameEvent)
 {
-	if (!CheckEventContains(nameEvent))
+	if (!HasEvent(nameEvent))
 	{
 		mEventMap[nameEvent] = std::make_unique<Delegate<CallbackArgs ...>>();
 	}
@@ -59,9 +63,9 @@ inline void EventManager::CreateEvent(const std::string& nameEvent)
 template<typename ...CallbackArgs>
 inline std::optional<size_t> EventManager::AttachToEvent(const std::string& nameEvent, void(*func)(CallbackArgs...))
 {
-	if (CheckEventContains(nameEvent))
+	auto delegate = GetDelegate<CallbackArgs...>(nameEvent);
+	if (delegate)
 	{
-		auto delegate = static_cast<Delegate<CallbackArgs ...>*>(mEventMap.at(nameEvent).get());
 		return delegate->Attach(func);
 	}
 	return std::nullopt;
@@ -70,9 +74,9 @@ inline std::optional<size_t> EventManager::AttachToEvent(const std::string& name
 template<typename T, typename ...CallbackArgs>
 inline std::optional<size_t> EventManager::AttachToEvent(const std::string& nameEvent, T* obj, void(T::* method)(CallbackArgs...))
 {
-	if (CheckEventContains(nameEvent))
+	auto delegate = GetDelegate<CallbackArgs...>(nameEvent);
+	if (delegate)
 	{
-		auto delegate = static_cast<Delegate<CallbackArgs...>*>(mEventMap.at(nameEvent).get());
 		return delegate->Attach(obj, method);
 	}
 	return std::nullopt;
@@ -81,25 +85,25 @@ inline std::optional<size_t> EventManager::AttachToEvent(const std::string& name
 template<typename ...CallbackArgs>
 inline void EventManager::DetachFromEvent(const std::string& nameEvent, size_t callBackID)
 {
-	if (CheckEventContains(nameEvent))
+	auto delegate = GetDelegate<CallbackArgs...>(nameEvent);
+	if (delegate)
 	{
-		auto delegate = static_cast<Delegate<CallbackArgs...>*>(mEventMap.at(nameEvent).get());
 		delegate->Detach(callBackID);
 	}
 }
 
 template<typename ...CallbackArgs>
-inline void EventManager::CallAllEventSubscribes(const std::string& nameEvent, CallbackArgs && ...args)
+inline void EventManager::InvokeAllSubscribers(const std::string& nameEvent, CallbackArgs && ...args)
 {
-	if (CheckEventContains(nameEvent))
+	if (HasEvent(nameEvent))
 	{
 		auto delegate = static_cast<Delegate<CallbackArgs ...>*>(mEventMap.at(nameEvent).get());
 
-		auto bEventIsEmpty = EventIsEmpty(nameEvent);
+		auto isEventEmpty = EventIsEmpty(nameEvent);
 
-		if (!bEventIsEmpty.has_value()) return;
+		if (!isEventEmpty.has_value()) return;
 
-		if (!bEventIsEmpty.value())
+		if (!isEventEmpty.value())
 		{
 			delegate->InvokeAll(std::forward<CallbackArgs>(args) ...);
 		}
@@ -109,9 +113,9 @@ inline void EventManager::CallAllEventSubscribes(const std::string& nameEvent, C
 template<typename ...CallbackArgs>
 inline void EventManager::ClearEvent(const std::string& nameEvent)
 {
-	if (CheckEventContains(nameEvent))
+	auto delegate = GetDelegate<CallbackArgs...>(nameEvent);
+	if (delegate)
 	{
-		auto delegate = static_cast<Delegate<CallbackArgs...>*>(mEventMap.at(nameEvent).get());
 		delegate->Clear();
 	}
 }
@@ -119,15 +123,25 @@ inline void EventManager::ClearEvent(const std::string& nameEvent)
 template<typename ...CallbackArgs>
 inline std::optional<bool> EventManager::EventIsEmpty(const std::string& nameEvent)
 {
-	if (CheckEventContains(nameEvent))
+	auto delegate = GetDelegate<CallbackArgs...>(nameEvent);
+	if (delegate)
 	{
-		auto delegate = static_cast<Delegate<CallbackArgs...>*>(mEventMap.at(nameEvent).get());
 		return delegate->IsEmpty();
 	}
 	return std::nullopt;
 }
 
-inline bool EventManager::CheckEventContains(const std::string& nameEvent)
+template<typename ...CallbackArgs>
+inline Delegate<CallbackArgs...>* EventManager::GetDelegate(const std::string& nameEvent)
+{
+	if (!HasEvent(nameEvent))
+	{
+		return nullptr;
+	}
+	return static_cast<Delegate<CallbackArgs...>*>(mEventMap.at(nameEvent).get());
+}
+
+inline bool EventManager::HasEvent(const std::string& nameEvent)
 {
 	if (!mEventMap.contains(nameEvent))
 	{

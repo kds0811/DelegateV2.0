@@ -67,7 +67,7 @@ int main()
 	auto result1 = eventmanager.AttachToEvent("update", Function1);
 	auto result2 = eventmanager.AttachToEvent("update", FunctionAdd10);
 	auto result3 = eventmanager.AttachToEvent("update", FunctionAdd20);
-	eventmanager.CallAllEventSubscribes("update", 3, 5);
+	eventmanager.InvokeAllSubscribers("update", 3, 5);
 
 	F1 f1;
 	F2 f2;
@@ -77,7 +77,7 @@ int main()
 	auto result5 = eventmanager.AttachToEvent("methods", &f1, &F1::Function);
 	auto result6 = eventmanager.AttachToEvent("methods", &f2, &F2::Function);
 	auto result7 = eventmanager.AttachToEvent("methods", &f3, &F3::Function);
-	eventmanager.CallAllEventSubscribes("methods", 0.1f, 0.1f);
+	eventmanager.InvokeAllSubscribers("methods", 0.1f, 0.1f);
 
 	F4 f41;
 	F4 f42;
@@ -91,17 +91,17 @@ int main()
 	auto id4 = eventmanager.AttachToEvent("incrementCount", &f44, &F4::incrementCount);
 	auto id5 = eventmanager.AttachToEvent("incrementCount", &f45, &F4::incrementCount);
 
-	eventmanager.CallAllEventSubscribes("incrementCount");
+	eventmanager.InvokeAllSubscribers("incrementCount");
 	eventmanager.DetachFromEvent("incrementCount", id1.value());
-	eventmanager.CallAllEventSubscribes("incrementCount");
-	eventmanager.CallAllEventSubscribes("incrementCount");
-	eventmanager.CallAllEventSubscribes("incrementCount");
+	eventmanager.InvokeAllSubscribers("incrementCount");
+	eventmanager.InvokeAllSubscribers("incrementCount");
+	eventmanager.InvokeAllSubscribers("incrementCount");
 	eventmanager.ClearEvent("incrementCount");
-	eventmanager.CallAllEventSubscribes("incrementCount");
+	eventmanager.InvokeAllSubscribers("incrementCount");
 
 	eventmanager.CreateEvent("printCount");
 	auto result8 = eventmanager.AttachToEvent("printCount", &f41, &F4::PrintCount);
-	eventmanager.CallAllEventSubscribes("printCount");
+	eventmanager.InvokeAllSubscribers("printCount");
 
 
 	return 0;
