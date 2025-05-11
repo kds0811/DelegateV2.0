@@ -97,15 +97,10 @@ inline void EventManager::InvokeAllSubscribers(const std::string& nameEvent, Cal
 {
 	if (HasEvent(nameEvent))
 	{
-		auto delegate = static_cast<Delegate<CallbackArgs ...>*>(mEventMap.at(nameEvent).get());
-
-		auto isEventEmpty = EventIsEmpty(nameEvent);
-
-		if (!isEventEmpty.has_value()) return;
-
-		if (!isEventEmpty.value())
+		auto delegate = GetDelegate<CallbackArgs...>(nameEvent);
+		if (delegate && !delegate->IsEmpty())
 		{
-			delegate->InvokeAll(std::forward<CallbackArgs>(args) ...);
+			delegate->InvokeAll(std::forward<CallbackArgs>(args)...);
 		}
 	}
 }
