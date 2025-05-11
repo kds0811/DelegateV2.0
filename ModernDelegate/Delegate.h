@@ -31,7 +31,7 @@ public:
 	void Add(T* obj, void (T::* method)(CallBackArgs...))
 	{
 		mCallBacksVec.push_back([obj, method](CallBackArgs... args) {
-			(obj->*method)(args...);
+			(obj->*method)(std::forward<CallBackArgs>(args) ...);
 			});
 	}
 
@@ -39,10 +39,9 @@ public:
 	{
 		for (auto& f : mCallBacksVec)
 		{
-			std::invoke(f , args ...);
+			std::invoke(f , std::forward<CallBackArgs>(args) ...);
 		}
 	}
-
 };
 
 

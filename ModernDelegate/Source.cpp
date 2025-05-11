@@ -30,6 +30,20 @@ public:
 };
 
 
+class F4
+{
+public:
+	static inline int count = 0;
+	void incrementCount()
+	{
+		++count;
+	}
+	void PrintCount()
+	{
+		std::cout << count << "\n";
+	}
+};
+
 void Function1(int a, int b)
 {
 	std::cout << a + b << "\n";
@@ -63,7 +77,27 @@ int main()
 	eventmanager.AttachToEvent("methods", &f1, &F1::Function);
 	eventmanager.AttachToEvent("methods", &f2, &F2::Function);
 	eventmanager.AttachToEvent("methods", &f3, &F3::Function);
-	eventmanager.CallAllEventSubscribes("methods", 0.5f, 1.0f);
+	eventmanager.CallAllEventSubscribes("methods", 0.1f, 0.1f);
+
+	F4 f41;
+	F4 f42;
+	F4 f43;
+	F4 f44;
+	F4 f45;
+	eventmanager.CreateEvent("incrementCount");
+	eventmanager.AttachToEvent("incrementCount", &f41, &F4::incrementCount);
+	eventmanager.AttachToEvent("incrementCount", &f42, &F4::incrementCount);
+	eventmanager.AttachToEvent("incrementCount", &f43, &F4::incrementCount);
+	eventmanager.AttachToEvent("incrementCount", &f44, &F4::incrementCount);
+	eventmanager.AttachToEvent("incrementCount", &f45, &F4::incrementCount);
+	eventmanager.CreateEvent("printCount");
+	eventmanager.AttachToEvent("printCount", &f41, &F4::PrintCount);
+	eventmanager.CallAllEventSubscribes("incrementCount");
+	eventmanager.CallAllEventSubscribes("incrementCount");
+	eventmanager.CallAllEventSubscribes("incrementCount");
+	eventmanager.CallAllEventSubscribes("incrementCount");
+	eventmanager.CallAllEventSubscribes("incrementCount");
+	eventmanager.CallAllEventSubscribes("printCount");
 
 	return 0;
 }
