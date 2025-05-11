@@ -14,30 +14,37 @@ template <typename ... CallBackArgs>
 class Delegate : public IDelegate
 {
 public:
-	using typeID = size_t;
 	using CallBackFunction = std::function<void(CallBackArgs ...)>;
-	using CallBackMap = std::unordered_map<typeID, CallBackFunction>;
+	using CallBackMap = std::unordered_map<size_t, CallBackFunction>;
 
 private:
 	CallBackMap mCallBackMap{};
-	typeID mID = 0;
+	size_t mID = 0;
 
 public:
 	Delegate() = default;
 
-	void Attach(const CallBackFunction& func)
+	size_t Attach(const CallBackFunction& func)
 	{
-		mCallBackMap[GetID()] = func;
+		auto id = GetID();
+		mCallBackMap.emplace(id, func);
+		return id;
 	}
 
 	template <typename T>
-	void Attach(T* obj, void (T::* method)(CallBackArgs...))
+	size_t Attach(T* obj, void (T::* method)(CallBackArgs...))
 	{
-		mCallBackMap[GetID()] = [obj, method](CallBackArgs... args) {
-			(obj->*method)(std::forward<CallBackArgs>(args) ...); };
+		auto id = GetID();
+		auto closure = [obj, method](CallBackArgs... args) { (obj->*method)(std::forward<CallBackArgs>(args) ...); };
+		mCallBackMap.emplace(id, closure);
+		return id;
 	}
 
-	template <typename ... CallbackArgs>
+	void Detach(size_t id)
+	{
+		mCallBackMap.erase(id);
+	}
+
 	void InvokeAll(CallBackArgs&& ... args)
 	{
 		for (const auto& [id, func] : mCallBackMap)
@@ -46,7 +53,7 @@ public:
 		}
 	}
 private:
-	typeID GetID()
+	size_t GetID()
 	{
 		return mID++;
 	}

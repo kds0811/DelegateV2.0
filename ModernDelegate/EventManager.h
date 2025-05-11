@@ -7,7 +7,6 @@
 class EventManager
 {
 	using EventMap = std::unordered_map<std::string, std::unique_ptr<IDelegate>>;
-
 	EventMap mEventMap;
 
 public:
@@ -26,23 +25,30 @@ public:
 	}
 
 	template<typename ... CallbackArgs>
-	void AttachToEvent(const std::string& nameEvent, void(*func)(CallbackArgs ...))
+	size_t AttachToEvent(const std::string& nameEvent, void(*func)(CallbackArgs ...))
 	{
 		if (CheckEventContains(nameEvent))
 		{
 			auto delegate = static_cast<Delegate<CallbackArgs ...>*>(mEventMap.at(nameEvent).get());
-			delegate->Attach(func);
+			return delegate->Attach(func);
 		}
+		return 0;
 	}
 
 	template <typename T, typename... CallbackArgs>
-	void AttachToEvent(const std::string& nameEvent, T* obj, void (T::* method)(CallbackArgs...))
+	size_t AttachToEvent(const std::string& nameEvent, T* obj, void (T::* method)(CallbackArgs...))
 	{
 		if (CheckEventContains(nameEvent))
 		{
 			auto delegate = static_cast<Delegate<CallbackArgs...>*>(mEventMap.at(nameEvent).get());
-			delegate->Attach(obj, method);
+			return delegate->Attach(obj, method);
 		}
+		return 0;
+	}
+
+	void DetachFromEvent(const std::string& nameEvent, size_t callBackID)
+	{
+
 	}
 
 	template<typename ... CallbackArgs>
@@ -54,6 +60,7 @@ public:
 			delegate->InvokeAll(std::forward<CallbackArgs>(args) ...);
 		}
 	}
+
 
 private:
 	bool CheckEventContains(const std::string& nameEvent)
