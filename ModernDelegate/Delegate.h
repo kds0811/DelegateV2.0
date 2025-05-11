@@ -35,7 +35,7 @@ public:
 			});
 	}
 
-	void InvokeAll(CallBackArgs ... args)
+	void InvokeAll(CallBackArgs&& ... args)
 	{
 		for (auto& f : mCallBacksVec)
 		{
