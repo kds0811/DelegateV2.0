@@ -50,7 +50,7 @@ namespace Delegate
         void (T::*method)(CallbackArgs...));
 
     template <typename... CallbackArgs>
-    void DetachFromEvent(const std::string& eventName, std::int32_t callBackID);
+    void DetachFromEvent(std::string_view eventName, std::int32_t callBackID);
 
     [[nodiscard]] inline bool HasEvent(const std::string& eventName);
 
@@ -105,7 +105,7 @@ namespace Delegate
   }
 
   template <typename... CallbackArgs>
-  inline void EventManager::DetachFromEvent(const std::string& eventName, std::int32_t callBackID)
+  inline void EventManager::DetachFromEvent(std::string_view eventName, std::int32_t callBackID)
   {
     auto delegate = GetDelegate<CallbackArgs...>(eventName);
     if (delegate)
