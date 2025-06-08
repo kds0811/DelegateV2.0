@@ -1,7 +1,7 @@
 #pragma once
+#include <cstdint>
 #include <functional>
 #include <unordered_map>
-#include <cstdint>
 
 
 namespace Delegate
@@ -59,10 +59,7 @@ namespace Delegate
     [[nodiscard]] inline bool IsEmpty() const noexcept { return mCallBackMap.empty(); }
 
   private:
-
-    [[nodiscard]] constexpr std::int32_t GetID() noexcept { return mID++; } 
-
+    [[nodiscard]] constexpr std::int32_t GetID() noexcept { return mID++; }
   };
 
 } // namespace Delegate
-

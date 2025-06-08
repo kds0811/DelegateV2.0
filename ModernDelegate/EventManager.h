@@ -56,7 +56,6 @@ namespace Delegate
 
     template <typename... CallbackArgs>
     [[nodiscard]] Delegate<CallbackArgs...>* GetDelegate(const std::string& eventName);
-
   };
 
   EventManager* EventManager::GetEventManager()
@@ -167,7 +166,3 @@ namespace Delegate
   }
 
 } // namespace Delegate
-
-
-
-

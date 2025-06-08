@@ -1,6 +1,6 @@
 #pragma once
-#include <optional>
 #include "EventManager.h"
+#include <optional>
 
 
 namespace Delegate
@@ -83,4 +83,3 @@ namespace Delegate
   }
 
 } // namespace Delegate
-
