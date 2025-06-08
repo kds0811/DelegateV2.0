@@ -1,5 +1,5 @@
 #include <iostream>
-#include "gtest/gtest.h"
+//#include "gtest/gtest.h"
 #include "EventManager.h"
 #include "ScopedEventHandler.h"
 
@@ -85,6 +85,7 @@ public:
 
 int main()
 {
+	using namespace Delegate;
 	EventManager* pEventmanager = EventManager::GetEventManager();
 
 	pEventmanager->CreateEvent<int, int>("update");
