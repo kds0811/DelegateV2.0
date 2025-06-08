@@ -46,11 +46,11 @@ namespace Delegate
 
     inline void Detach(std::int32_t id) { mCallBackMap.erase(id); }
 
-    inline void InvokeAll(CallBackArgs&&... args) const
+    inline void InvokeAll(const CallBackArgs&... args) const
     {
       for (const auto& [id, func] : mCallBackMap)
       {
-        std::invoke(func, std::forward<CallBackArgs>(args)...);
+        std::invoke(func, args...);
       }
     }
 

@@ -29,7 +29,7 @@ namespace Delegate
     void ClearEvent(const std::string& eventName);
 
     template <typename... CallbackArgs>
-    [[nodiscard]] std::optional<bool> IsEventEmpty(const std::string& eventName);
+    [[nodiscard]] std::optional<bool> IsEventEmpty(std::string_view eventName);
 
   private:
     EventManager() {}
@@ -52,10 +52,10 @@ namespace Delegate
     template <typename... CallbackArgs>
     void DetachFromEvent(std::string_view eventName, std::int32_t callBackID);
 
-    [[nodiscard]] inline bool HasEvent(const std::string& eventName);
+    [[nodiscard]] inline bool HasEvent(std::string_view eventName);
 
     template <typename... CallbackArgs>
-    [[nodiscard]] Delegate<CallbackArgs...>* GetDelegate(const std::string& eventName);
+    [[nodiscard]] Delegate<CallbackArgs...>* GetDelegate(std::string_view eventName);
   };
 
   EventManager* EventManager::GetEventManager()
@@ -135,9 +135,9 @@ namespace Delegate
   }
 
   template <typename... CallbackArgs>
-  inline std::optional<bool> EventManager::IsEventEmpty(const std::string& nameEvent)
+  inline std::optional<bool> EventManager::IsEventEmpty(std::string_view nameEvent)
   {
-    auto delegate = GetDelegate<CallbackArgs...>(nameEvent);
+    auto delegate = GetDelegate<CallbackArgs...>(nameEvent.data());
     if (delegate)
     {
       return delegate->IsEmpty();
@@ -146,18 +146,18 @@ namespace Delegate
   }
 
   template <typename... CallbackArgs>
-  inline Delegate<CallbackArgs...>* EventManager::GetDelegate(const std::string& nameEvent)
+  inline Delegate<CallbackArgs...>* EventManager::GetDelegate(std::string_view nameEvent)
   {
     if (!HasEvent(nameEvent))
     {
       return nullptr;
     }
-    return static_cast<Delegate<CallbackArgs...>*>(mEventMap.at(nameEvent).get());
+    return static_cast<Delegate<CallbackArgs...>*>(mEventMap.at(nameEvent.data()).get());
   }
 
-  inline bool EventManager::HasEvent(const std::string& nameEvent)
+  inline bool EventManager::HasEvent(std::string_view nameEvent)
   {
-    if (!mEventMap.contains(nameEvent))
+    if (!mEventMap.contains(nameEvent.data()))
     {
       // LOG_ERROR("An event named  ", nameEvent, "  doesn't exist");
       return false;
