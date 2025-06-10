@@ -28,7 +28,7 @@ namespace Delegate
   public:
     Delegate() = default;
 
-    [[nodiscard]] inline std::int32_t Attach(const CallBackFunction& func)
+    [[nodiscard]] inline std::int32_t Attach(CallBackFunction func)
     {
       auto id = GetID();
       mCallBackMap.emplace(id, func);
