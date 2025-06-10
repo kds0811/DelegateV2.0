@@ -6,6 +6,9 @@ struct TestPoint
 {
   int X{};
   int Y{};
+  
+  ScopedEventHandler EventHandler;
+
   void Add(int x, int y)
   {
     X += x;
@@ -21,8 +24,8 @@ struct StaticStruct
 
 struct DelegateTests : public testing::Test
 {
-  Delegate::Delegate<int, int> dg;
-  Delegate::Delegate<int> dg1;
+  Delegate::Details::Delegate<int, int> dg;
+  Delegate::Details::Delegate<int> dg1;
   TestPoint pa;
   TestPoint pb;
   TestPoint pc;
@@ -30,8 +33,11 @@ struct DelegateTests : public testing::Test
   DelegateTests() {}
 };
 
-void FreeFunction(int x)
+static inline int gVar = 0;
+
+void FreeFun(int x)
 {
+  gVar += x;
 }
 
 
@@ -104,4 +110,36 @@ TEST_F(DelegateTests, MultiplyAdded)
   dg1.InvokeAll(100);
   EXPECT_EQ(StaticStruct::X, 700);
 }
+
+TEST_F(DelegateTests, FreeFunction)
+{
+  auto id = dg1.Attach(FreeFun);
+  EXPECT_EQ(0, id);
+
+  dg1.InvokeAll(999);
+  EXPECT_EQ(999, gVar);
+}
+
+TEST_F(DelegateTests, ClearTest)
+{
+  auto ida = dg.Attach(&pa, &TestPoint::Add);
+  EXPECT_EQ(0, ida);
+
+  auto idb = dg.Attach(&pb, &TestPoint::Add);
+  EXPECT_EQ(1, idb);
+
+  EXPECT_FALSE(dg.IsEmpty());
+
+  dg.Clear();
+  EXPECT_TRUE(dg.IsEmpty());
+
+  dg.InvokeAll(30, 50);
+
+  EXPECT_EQ(0, pa.X);
+  EXPECT_EQ(0, pa.Y);
+
+  EXPECT_EQ(0, pa.X);
+  EXPECT_EQ(0, pa.Y);
+}
+
 

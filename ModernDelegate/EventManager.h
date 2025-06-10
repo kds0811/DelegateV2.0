@@ -7,162 +7,171 @@
 
 namespace Delegate
 {
-  class ScopedEventHandler;
 
-  class EventManager
+  namespace Details
   {
-    friend ScopedEventHandler;
-    using EventMap = std::unordered_map<std::string, std::unique_ptr<BaseDelegate>>;
+    class ScopedEventHandler;
 
-    EventMap mEventMap; // storage
+    class EventManager
+    {
+      friend ScopedEventHandler;
 
-  public:
-    [[nodiscard]] static EventManager* GetEventManager();
+      using EventMap = std::unordered_map<std::string, std::unique_ptr<BaseDelegate>>;
+
+      EventMap mEventMap; // storage
+
+    public:
+      ~EventManager() {}
+      [[nodiscard]] static EventManager* GetEventManager();
+
+      template <typename... CallbackArgs>
+      void CreateEvent(std::string_view eventName);
+
+      template <typename... CallbackArgs>
+      void InvokeAllEventSubscribers(std::string_view eventName, CallbackArgs&&... args);
+
+      template <typename... CallbackArgs>
+      void ClearEvent(std::string_view eventName);
+
+      template <typename... CallbackArgs>
+      [[nodiscard]] std::optional<bool> IsEventEmpty(std::string_view eventName);
+
+    private:
+      EventManager() {}
+      EventManager(const EventManager&)                      = delete;
+      EventManager(const EventManager&&) noexcept            = delete;
+      EventManager& operator=(const EventManager&)           = delete;
+      EventManager& operator=(const EventManager&&) noexcept = delete;
+
+
+      template <typename... CallbackArgs>
+      [[nodiscard]] std::optional<std::int32_t> AttachToEvent(
+          std::string_view eventName,
+          void (*func)(CallbackArgs...));
+
+      template <typename T, typename... CallbackArgs>
+      [[nodiscard]] std::optional<std::int32_t> AttachToEvent(
+          std::string_view eventName,
+          T* obj,
+          void (T::*method)(CallbackArgs...));
+
+      template <typename... CallbackArgs>
+      void DetachFromEvent(std::string_view eventName, std::int32_t callBackID);
+
+      [[nodiscard]] inline bool HasEvent(std::string_view eventName);
+
+      template <typename... CallbackArgs>
+      [[nodiscard]] Delegate<CallbackArgs...>* GetDelegate(std::string_view eventName);
+    };
+
+    EventManager* EventManager::GetEventManager()
+    {
+      static EventManager* instance = new EventManager();
+      return instance;
+    }
 
     template <typename... CallbackArgs>
-    void CreateEvent(const std::string& eventName);
+    inline void EventManager::CreateEvent(std::string_view eventName)
+    {
+      if (!HasEvent(eventName))
+      {
+        auto dg = std::make_unique<Delegate::Delegate<CallbackArgs...>>();
+        mEventMap.emplace(eventName, std::move(dg));
+      }
+      else
+      {
+        // LOG_ERROR("Event with ", nameEvent, " allready is created");
+      }
+    }
 
     template <typename... CallbackArgs>
-    void InvokeAllEventSubscribers(const std::string& eventName, CallbackArgs&&... args);
-
-    template <typename... CallbackArgs>
-    void ClearEvent(const std::string& eventName);
-
-    template <typename... CallbackArgs>
-    [[nodiscard]] std::optional<bool> IsEventEmpty(std::string_view eventName);
-
-  private:
-    EventManager() {}
-    EventManager(const EventManager&)                      = delete;
-    EventManager(const EventManager&&) noexcept            = delete;
-    EventManager& operator=(const EventManager&)           = delete;
-    EventManager& operator=(const EventManager&&) noexcept = delete;
-
-    template <typename... CallbackArgs>
-    [[nodiscard]] std::optional<std::int32_t> AttachToEvent(
-        const std::string& eventName,
-        void (*func)(CallbackArgs...));
+    inline std::optional<std::int32_t> EventManager::AttachToEvent(
+        std::string_view eventName,
+        void (*func)(CallbackArgs...))
+    {
+      auto delegate = GetDelegate<CallbackArgs...>(eventName);
+      if (delegate)
+      {
+        return delegate->Attach(func);
+      }
+      return std::nullopt;
+    }
 
     template <typename T, typename... CallbackArgs>
-    [[nodiscard]] std::optional<std::int32_t> AttachToEvent(
-        const std::string& eventName,
+    inline std::optional<std::int32_t> EventManager::AttachToEvent(
+        std::string_view eventName,
         T* obj,
-        void (T::*method)(CallbackArgs...));
+        void (T::*method)(CallbackArgs...))
+    {
+      auto delegate = GetDelegate<CallbackArgs...>(eventName);
+      if (delegate)
+      {
+        return delegate->Attach(obj, method);
+      }
+      return std::nullopt;
+    }
 
     template <typename... CallbackArgs>
-    void DetachFromEvent(std::string_view eventName, std::int32_t callBackID);
-
-    [[nodiscard]] inline bool HasEvent(std::string_view eventName);
+    inline void EventManager::DetachFromEvent(std::string_view eventName, std::int32_t callBackID)
+    {
+      auto delegate = GetDelegate<CallbackArgs...>(eventName);
+      if (delegate)
+      {
+        delegate->Detach(callBackID);
+      }
+    }
 
     template <typename... CallbackArgs>
-    [[nodiscard]] Delegate<CallbackArgs...>* GetDelegate(std::string_view eventName);
-  };
-
-  EventManager* EventManager::GetEventManager()
-  {
-    static EventManager* instance = new EventManager();
-    return instance;
-  }
-
-  template <typename... CallbackArgs>
-  inline void EventManager::CreateEvent(const std::string& eventName)
-  {
-    if (!HasEvent(eventName))
+    inline void EventManager::InvokeAllEventSubscribers(std::string_view eventName, CallbackArgs&&... args)
     {
-      mEventMap[eventName] = std::make_unique<Delegate::Delegate<CallbackArgs...>>();
+      auto delegate = GetDelegate<CallbackArgs...>(eventName);
+      if (delegate && !delegate->IsEmpty())
+      {
+        delegate->InvokeAll(std::forward<CallbackArgs>(args)...);
+      }
     }
-    else
-    {
-      // LOG_ERROR("Event with ", nameEvent, " allready is created");
-    }
-  }
 
-  template <typename... CallbackArgs>
-  inline std::optional<std::int32_t> EventManager::AttachToEvent(
-      const std::string& eventName,
-      void (*func)(CallbackArgs...))
-  {
-    auto delegate = GetDelegate<CallbackArgs...>(eventName);
-    if (delegate)
+    template <typename... CallbackArgs>
+    inline void EventManager::ClearEvent(std::string_view eventName)
     {
-      return delegate->Attach(func);
+      auto delegate = GetDelegate<CallbackArgs...>(eventName);
+      if (delegate)
+      {
+        delegate->Clear();
+      }
     }
-    return std::nullopt;
-  }
 
-  template <typename T, typename... CallbackArgs>
-  inline std::optional<std::int32_t> EventManager::AttachToEvent(
-      const std::string& eventName,
-      T* obj,
-      void (T::*method)(CallbackArgs...))
-  {
-    auto delegate = GetDelegate<CallbackArgs...>(eventName);
-    if (delegate)
+    template <typename... CallbackArgs>
+    inline std::optional<bool> EventManager::IsEventEmpty(std::string_view nameEvent)
     {
-      return delegate->Attach(obj, method);
+      auto delegate = GetDelegate<CallbackArgs...>(nameEvent.data());
+      if (delegate)
+      {
+        return delegate->IsEmpty();
+      }
+      return std::nullopt;
     }
-    return std::nullopt;
-  }
 
-  template <typename... CallbackArgs>
-  inline void EventManager::DetachFromEvent(std::string_view eventName, std::int32_t callBackID)
-  {
-    auto delegate = GetDelegate<CallbackArgs...>(eventName);
-    if (delegate)
+    template <typename... CallbackArgs>
+    inline Delegate<CallbackArgs...>* EventManager::GetDelegate(std::string_view nameEvent)
     {
-      delegate->Detach(callBackID);
+      if (!HasEvent(nameEvent))
+      {
+        return nullptr;
+      }
+      return static_cast<Delegate<CallbackArgs...>*>(mEventMap.at(nameEvent.data()).get());
     }
-  }
 
-  template <typename... CallbackArgs>
-  inline void EventManager::InvokeAllEventSubscribers(const std::string& eventName, CallbackArgs&&... args)
-  {
-    auto delegate = GetDelegate<CallbackArgs...>(eventName);
-    if (delegate && !delegate->IsEmpty())
+    inline bool EventManager::HasEvent(std::string_view nameEvent)
     {
-      delegate->InvokeAll(std::forward<CallbackArgs>(args)...);
+      if (!mEventMap.contains(nameEvent.data()))
+      {
+        // LOG_ERROR("An event named  ", nameEvent, "  doesn't exist");
+        return false;
+      }
+      return true;
     }
-  }
 
-  template <typename... CallbackArgs>
-  inline void EventManager::ClearEvent(const std::string& eventName)
-  {
-    auto delegate = GetDelegate<CallbackArgs...>(eventName);
-    if (delegate)
-    {
-      delegate->Clear();
-    }
-  }
-
-  template <typename... CallbackArgs>
-  inline std::optional<bool> EventManager::IsEventEmpty(std::string_view nameEvent)
-  {
-    auto delegate = GetDelegate<CallbackArgs...>(nameEvent.data());
-    if (delegate)
-    {
-      return delegate->IsEmpty();
-    }
-    return std::nullopt;
-  }
-
-  template <typename... CallbackArgs>
-  inline Delegate<CallbackArgs...>* EventManager::GetDelegate(std::string_view nameEvent)
-  {
-    if (!HasEvent(nameEvent))
-    {
-      return nullptr;
-    }
-    return static_cast<Delegate<CallbackArgs...>*>(mEventMap.at(nameEvent.data()).get());
-  }
-
-  inline bool EventManager::HasEvent(std::string_view nameEvent)
-  {
-    if (!mEventMap.contains(nameEvent.data()))
-    {
-      // LOG_ERROR("An event named  ", nameEvent, "  doesn't exist");
-      return false;
-    }
-    return true;
-  }
+  } // namespace Details
 
 } // namespace Delegate

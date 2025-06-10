@@ -6,60 +6,64 @@
 
 namespace Delegate
 {
-  class BaseDelegate
+  namespace Details
   {
-  public:
-    BaseDelegate()          = default;
-    virtual ~BaseDelegate() = default;
-  };
-
-  template <typename... CallBackArgs>
-  class Delegate : public BaseDelegate
-  {
-  public:
-    using CallBackFunction = std::function<void(CallBackArgs...)>;
-    using CallBackMap      = std::unordered_map<std::int32_t, CallBackFunction>;
-
-  private:
-    std::int32_t mID = 0;
-    CallBackMap mCallBackMap{};
-
-
-  public:
-    Delegate() = default;
-
-    [[nodiscard]] inline std::int32_t Attach(CallBackFunction func)
+    class BaseDelegate
     {
-      auto id = GetID();
-      mCallBackMap.emplace(id, func);
-      return id;
-    }
+    public:
+      BaseDelegate()          = default;
+      virtual ~BaseDelegate() = default;
+    };
 
-    template <typename T>
-    [[nodiscard]] inline std::int32_t Attach(T* obj, void (T::*method)(CallBackArgs...))
+    template <typename... CallBackArgs>
+    class Delegate : public BaseDelegate
     {
-      auto id      = GetID();
-      auto closure = [obj, method](CallBackArgs... args) { (obj->*method)(std::forward<CallBackArgs>(args)...); };
-      mCallBackMap.emplace(id, std::move(closure));
-      return id;
-    }
+    public:
+      using CallBackFunction = std::function<void(CallBackArgs...)>;
+      using CallBackMap      = std::unordered_map<std::int32_t, CallBackFunction>;
 
-    inline void Detach(std::int32_t id) { mCallBackMap.erase(id); }
+    private:
+      std::int32_t mID = 0;
+      CallBackMap mCallBackMap{};
 
-    inline void InvokeAll(const CallBackArgs&... args) const
-    {
-      for (const auto& [id, func] : mCallBackMap)
+
+    public:
+      Delegate() = default;
+
+      [[nodiscard]] inline std::int32_t Attach(CallBackFunction func)
       {
-        std::invoke(func, args...);
+        auto id = GetID();
+        mCallBackMap.emplace(id, func);
+        return id;
       }
-    }
 
-    inline void Clear() noexcept { mCallBackMap.clear(); }
+      template <typename T>
+      [[nodiscard]] inline std::int32_t Attach(T* obj, void (T::*method)(CallBackArgs...))
+      {
+        auto id      = GetID();
+        auto closure = [obj, method](CallBackArgs... args) { (obj->*method)(std::forward<CallBackArgs>(args)...); };
+        mCallBackMap.emplace(id, std::move(closure));
+        return id;
+      }
 
-    [[nodiscard]] inline bool IsEmpty() const noexcept { return mCallBackMap.empty(); }
+      inline void Detach(std::int32_t id) { mCallBackMap.erase(id); }
 
-  private:
-    [[nodiscard]] constexpr std::int32_t GetID() noexcept { return mID++; }
-  };
+      inline void InvokeAll(const CallBackArgs&... args) const
+      {
+        for (const auto& [id, func] : mCallBackMap)
+        {
+          std::invoke(func, args...);
+        }
+      }
+
+      inline void Clear() noexcept { mCallBackMap.clear(); }
+
+      [[nodiscard]] inline bool IsEmpty() const noexcept { return mCallBackMap.empty(); }
+
+    private:
+      [[nodiscard]] constexpr std::int32_t GetID() noexcept { return mID++; }
+    };
+
+  } // namespace Details
 
 } // namespace Delegate
