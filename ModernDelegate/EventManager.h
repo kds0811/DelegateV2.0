@@ -16,13 +16,13 @@ namespace Delegate
     {
       friend ScopedEventHandler;
 
-      using EventMap = std::unordered_map<std::string, std::unique_ptr<BaseDelegate>>;
+      using EventMap = std::unordered_map<std::string_view, std::unique_ptr<BaseDelegate>>;
 
       EventMap mEventMap; // storage
 
     public:
       ~EventManager() {}
-      [[nodiscard]] static EventManager* GetEventManager();
+      [[nodiscard]] static EventManager* Get();
 
       template <typename... CallbackArgs>
       void CreateEvent(std::string_view eventName);
@@ -45,15 +45,10 @@ namespace Delegate
 
 
       template <typename... CallbackArgs>
-      [[nodiscard]] std::optional<std::int32_t> AttachToEvent(
-          std::string_view eventName,
-          void (*func)(CallbackArgs...));
+      [[nodiscard]] std::int32_t AttachToEvent(std::string_view eventName, void (*func)(CallbackArgs...));
 
       template <typename T, typename... CallbackArgs>
-      [[nodiscard]] std::optional<std::int32_t> AttachToEvent(
-          std::string_view eventName,
-          T* obj,
-          void (T::*method)(CallbackArgs...));
+      [[nodiscard]] std::int32_t AttachToEvent(std::string_view eventName, T* obj, void (T::*method)(CallbackArgs...));
 
       template <typename... CallbackArgs>
       void DetachFromEvent(std::string_view eventName, std::int32_t callBackID);
@@ -62,9 +57,10 @@ namespace Delegate
 
       template <typename... CallbackArgs>
       [[nodiscard]] Delegate<CallbackArgs...>* GetDelegate(std::string_view eventName);
+
     };
 
-    EventManager* EventManager::GetEventManager()
+    EventManager* EventManager::Get()
     {
       static EventManager* instance = new EventManager();
       return instance;
@@ -73,32 +69,31 @@ namespace Delegate
     template <typename... CallbackArgs>
     inline void EventManager::CreateEvent(std::string_view eventName)
     {
-      if (!HasEvent(eventName))
-      {
-        auto dg = std::make_unique<Delegate::Delegate<CallbackArgs...>>();
-        mEventMap.emplace(eventName, std::move(dg));
-      }
-      else
-      {
-        // LOG_ERROR("Event with ", nameEvent, " allready is created");
-      }
+      if (HasEvent(eventName))
+        return;
+
+      auto dg = std::make_unique<Delegate::Delegate<CallbackArgs...>>();
+      mEventMap.emplace(eventName, std::move(dg));
     }
 
     template <typename... CallbackArgs>
-    inline std::optional<std::int32_t> EventManager::AttachToEvent(
-        std::string_view eventName,
-        void (*func)(CallbackArgs...))
+    inline std::int32_t EventManager::AttachToEvent(std::string_view eventName, void (*func)(CallbackArgs...))
     {
       auto delegate = GetDelegate<CallbackArgs...>(eventName);
       if (delegate)
       {
         return delegate->Attach(func);
       }
-      return std::nullopt;
+      else
+      {
+        CreateEvent(eventName);
+        auto dg = GetDelegate<CallbackArgs...>(eventName);
+        return dg->Attach(func);
+      }
     }
 
     template <typename T, typename... CallbackArgs>
-    inline std::optional<std::int32_t> EventManager::AttachToEvent(
+    inline std::int32_t EventManager::AttachToEvent(
         std::string_view eventName,
         T* obj,
         void (T::*method)(CallbackArgs...))
@@ -108,7 +103,12 @@ namespace Delegate
       {
         return delegate->Attach(obj, method);
       }
-      return std::nullopt;
+      else
+      {
+        CreateEvent(eventName);
+        auto dg = GetDelegate<CallbackArgs...>(eventName);
+        return dg->Attach(obj, method);
+      }
     }
 
     template <typename... CallbackArgs>
@@ -129,6 +129,10 @@ namespace Delegate
       {
         delegate->InvokeAll(std::forward<CallbackArgs>(args)...);
       }
+      else
+      {
+        // LOG_ERROR("An event named  ", nameEvent, "  doesn't exist");
+      }
     }
 
     template <typename... CallbackArgs>
@@ -144,7 +148,7 @@ namespace Delegate
     template <typename... CallbackArgs>
     inline std::optional<bool> EventManager::IsEventEmpty(std::string_view nameEvent)
     {
-      auto delegate = GetDelegate<CallbackArgs...>(nameEvent.data());
+      auto delegate = GetDelegate<CallbackArgs...>(nameEvent);
       if (delegate)
       {
         return delegate->IsEmpty();
@@ -164,7 +168,7 @@ namespace Delegate
 
     inline bool EventManager::HasEvent(std::string_view nameEvent)
     {
-      if (!mEventMap.contains(nameEvent.data()))
+      if (!mEventMap.contains(nameEvent))
       {
         // LOG_ERROR("An event named  ", nameEvent, "  doesn't exist");
         return false;
@@ -175,3 +179,5 @@ namespace Delegate
   } // namespace Details
 
 } // namespace Delegate
+
+using EventManager = Delegate::Details::EventManager;

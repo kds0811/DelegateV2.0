@@ -6,7 +6,7 @@ struct TestPoint
 {
   int X{};
   int Y{};
-  
+
   ScopedEventHandler EventHandler;
 
   void Add(int x, int y)
@@ -14,6 +14,8 @@ struct TestPoint
     X += x;
     Y += y;
   }
+
+  TestPoint() { EventHandler.Attach("xEvent", this, &TestPoint::Add); }
 };
 
 struct StaticStruct
@@ -142,4 +144,110 @@ TEST_F(DelegateTests, ClearTest)
   EXPECT_EQ(0, pa.Y);
 }
 
+TEST_F(DelegateTests, ScopedEventHandlerTest)
+{
+  EventManager::Get()->CreateEvent("ZALUPA KONSKAYA");
+  ScopedEventHandler sceh{"ZALUPA KONSKAYA", &pb, &TestPoint::Add};
+  EventManager::Get()->InvokeAllEventSubscribers("ZALUPA KONSKAYA", 100, 100);
+  EXPECT_EQ(100, pb.X);
+  EXPECT_EQ(100, pb.Y);
+
+
+  pa.EventHandler.Attach("ZALUPA KONSKAYA", &pa, &TestPoint::Add);
+  EventManager::Get()->InvokeAllEventSubscribers("ZALUPA KONSKAYA", 100, 100);
+  EXPECT_EQ(200, pb.X);
+  EXPECT_EQ(200, pb.Y);
+  EXPECT_EQ(100, pa.X);
+  EXPECT_EQ(100, pa.Y);
+}
+
+TEST_F(DelegateTests, ScopedEventTestCtorPointInit)
+{
+  TestPoint tpa;
+  TestPoint tpb;
+  TestPoint tpc;
+  EventManager::Get()->InvokeAllEventSubscribers("xEvent", 100, 100);
+  EXPECT_EQ(100, tpa.X);
+  EXPECT_EQ(100, tpa.Y);
+  EXPECT_EQ(100, tpb.X);
+  EXPECT_EQ(100, tpb.Y);
+  EXPECT_EQ(100, tpc.X);
+  EXPECT_EQ(100, tpc.Y);
+
+  EventManager::Get()->InvokeAllEventSubscribers("xEvent", 100, 100);
+  EventManager::Get()->InvokeAllEventSubscribers("xEvent", 100, 100);
+  EventManager::Get()->InvokeAllEventSubscribers("xEvent", 100, 100);
+  EventManager::Get()->InvokeAllEventSubscribers("xEvent", 100, 100);
+  EXPECT_EQ(500, tpa.X);
+  EXPECT_EQ(500, tpa.Y);
+  EXPECT_EQ(500, tpb.X);
+  EXPECT_EQ(500, tpb.Y);
+  EXPECT_EQ(500, tpc.X);
+  EXPECT_EQ(500, tpc.Y);
+
+  tpc.EventHandler.Detach();
+
+  EventManager::Get()->InvokeAllEventSubscribers("xEvent", 100, 100);
+  EXPECT_EQ(600, tpa.X);
+  EXPECT_EQ(600, tpa.Y);
+  EXPECT_EQ(600, tpb.X);
+  EXPECT_EQ(600, tpb.Y);
+  EXPECT_EQ(500, tpc.X);
+  EXPECT_EQ(500, tpc.Y);
+}
+
+TEST_F(DelegateTests, ScopedEventTestScopedDeath)
+{
+  {
+    TestPoint tp;
+    tp.EventHandler.Attach("yEvent", &tp, &TestPoint::Add);
+    EXPECT_EQ(0, tp.X);
+    EXPECT_EQ(0, tp.Y);
+    EventManager::Get()->InvokeAllEventSubscribers("yEvent", 100, 100);
+    EXPECT_EQ(100, tp.X);
+    EXPECT_EQ(100, tp.Y);
+  }
+
+  EXPECT_NO_THROW(EventManager::Get()->InvokeAllEventSubscribers("yEvent", 100, 100));
+
+}
+
+TEST_F(DelegateTests, ScopedEventTestClearAll)
+{
+  EventManager::Get()->ClearEvent("xEvent");
+  EventManager::Get()->InvokeAllEventSubscribers("xEvent", 100, 100);
+  EXPECT_EQ(0, pb.X);
+  EXPECT_EQ(0, pb.Y);
+  EXPECT_EQ(0, pa.X);
+  EXPECT_EQ(0, pa.Y);
+}
+
+TEST_F(DelegateTests, ScopedEventTestMultiplyAttach)
+{
+  TestPoint tp;
+  auto res = tp.EventHandler.IsInitialized();
+  EXPECT_TRUE(res);
+  tp.EventHandler.Attach("Z", &tp, &TestPoint::Add);
+  tp.EventHandler.Attach("X", &tp, &TestPoint::Add);
+  tp.EventHandler.Attach("Y", &tp, &TestPoint::Add);
+  tp.EventHandler.Attach("Y", &tp, &TestPoint::Add);
+  tp.EventHandler.Attach("Y", &tp, &TestPoint::Add);
+  EventManager::Get()->InvokeAllEventSubscribers("Z", 100, 100);
+  EventManager::Get()->InvokeAllEventSubscribers("X", 100, 100);
+  EventManager::Get()->InvokeAllEventSubscribers("Y", 100, 100);
+  EXPECT_EQ(100, tp.X);
+  EXPECT_EQ(100, tp.Y);
+
+  auto res1 = tp.EventHandler.IsInitialized();
+  EXPECT_TRUE(res1);
+
+  tp.EventHandler.Detach();
+  auto res2 = tp.EventHandler.IsInitialized();
+  EXPECT_FALSE(res2);
+}
+
+TEST_F(DelegateTests, InvokeNonExistentEvent)
+{
+  EXPECT_NO_THROW(EventManager::Get()->InvokeAllEventSubscribers("NonExistentEvent", 10, 20));
+}
 

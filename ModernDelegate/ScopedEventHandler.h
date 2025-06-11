@@ -16,26 +16,44 @@ namespace Delegate
       ScopedEventHandler() {}
 
       template <typename... CallbackArgs>
-      explicit ScopedEventHandler(const std::string& eventName, void (*func)(CallbackArgs...)) : mEventName(eventName)
+      explicit ScopedEventHandler(const std::string_view eventName, void (*func)(CallbackArgs...)) : mEventName(eventName)
       {
-        Attach(mEventName, func);
+        AttachImpl(mEventName, func);
       }
 
       template <typename T, typename... CallbackArgs>
-      explicit ScopedEventHandler(const std::string& eventName, T* obj, void (T::*method)(CallbackArgs...))
+      explicit ScopedEventHandler(const std::string_view eventName, T* obj, void (T::*method)(CallbackArgs...))
         : mEventName(eventName)
       {
-        Attach(mEventName, obj, method);
+        AttachImpl(mEventName, obj, method);
       }
 
+      template <typename... CallbackArgs>
+      void Attach(const std::string_view eventName, void (*func)(CallbackArgs...)) 
+      {
+        if (IsInitialized())
+          Detach();
 
+        mEventName = eventName;
+        AttachImpl(mEventName, func);
+      }
+
+      template <typename T, typename... CallbackArgs>
+      void Attach(const std::string_view eventName, T* obj, void (T::*method)(CallbackArgs...))
+      {
+        if (IsInitialized())
+          Detach();
+
+        mEventName = eventName;
+        AttachImpl(mEventName, obj, method);
+      }
 
       inline void Detach()
       {
         if (!IsInitialized())
           return;
 
-        auto eventManager = EventManager::GetEventManager();
+        auto eventManager = EventManager::Get();
         if (eventManager)
         {
           eventManager->DetachFromEvent(mEventName, mCallBackID.value());
@@ -57,9 +75,9 @@ namespace Delegate
 
     private:
       template <typename... CallbackArgs>
-      void Attach(const std::string& eventName, CallbackArgs&&... args)
+      void AttachImpl(const std::string_view eventName, CallbackArgs&&... args)
       {
-        auto eventManager = EventManager::GetEventManager();
+        auto eventManager = EventManager::Get();
         if (eventManager)
         {
           mCallBackID = eventManager->AttachToEvent(eventName, std::forward<CallbackArgs>(args)...);

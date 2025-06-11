@@ -30,6 +30,21 @@ namespace Delegate
     public:
       Delegate() = default;
 
+      Delegate(const Delegate&)            = delete;
+      Delegate& operator=(const Delegate&) = delete;
+
+      Delegate(Delegate&& other) noexcept : mID(other.mID), mCallBackMap(std::move(other.mCallBackMap)) {}
+
+      Delegate& operator=(Delegate&& other) noexcept
+      {
+        if (this != &other)
+        {
+          mID          = other.mID;
+          mCallBackMap = std::move(other.mCallBackMap);
+        }
+        return *this;
+      }
+
       [[nodiscard]] inline std::int32_t Attach(CallBackFunction func)
       {
         auto id = GetID();
