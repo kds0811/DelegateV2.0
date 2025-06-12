@@ -251,3 +251,24 @@ TEST_F(DelegateTests, InvokeNonExistentEvent)
   EXPECT_NO_THROW(EventManager::Get()->InvokeAllEventSubscribers("NonExistentEvent", 10, 20));
 }
 
+
+TEST_F(DelegateTests, ScopedEventTestFreeFunc)
+{
+  ScopedEventHandler eventHandler;
+  eventHandler.Attach("QWERTY", &FreeFun);
+  EXPECT_EQ(gVar, 999);
+
+  EventManager::Get()->InvokeAllEventSubscribers("QWERTY", 1);
+  EXPECT_EQ(gVar, 1000);
+
+  auto res = EventManager::Get()->IsEventEmpty("QWERTY");
+  EXPECT_FALSE(res.value());
+
+  EventManager::Get()->ClearEvent("QWERTY");
+  EventManager::Get()->InvokeAllEventSubscribers("QWERTY", 1);
+  EXPECT_EQ(gVar, 1000);
+  auto res1 = EventManager::Get()->IsEventEmpty("QWERTY");
+  EXPECT_TRUE(res1.value());
+}
+
+

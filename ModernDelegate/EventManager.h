@@ -22,7 +22,11 @@ namespace Delegate
 
     public:
       ~EventManager() {}
-      [[nodiscard]] static EventManager* Get();
+      [[nodiscard]] static inline EventManager* Get()
+      {
+        static EventManager* instance = new EventManager();
+        return instance;
+      }
 
       template <typename... CallbackArgs>
       void CreateEvent(std::string_view eventName);
@@ -59,12 +63,6 @@ namespace Delegate
       [[nodiscard]] Delegate<CallbackArgs...>* GetDelegate(std::string_view eventName);
 
     };
-
-    EventManager* EventManager::Get()
-    {
-      static EventManager* instance = new EventManager();
-      return instance;
-    }
 
     template <typename... CallbackArgs>
     inline void EventManager::CreateEvent(std::string_view eventName)
