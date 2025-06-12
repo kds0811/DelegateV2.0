@@ -5,9 +5,9 @@
 #include <string>
 #include <unordered_map>
 
+
 namespace Delegate
 {
-
   namespace Details
   {
     class ScopedEventHandler;
@@ -177,4 +177,23 @@ namespace Delegate
 
 } // namespace Delegate
 
+    /**
+ * The `EventManager` class is responsible for managing events and their associated subscribers in an event-driven system.
+ * 
+ * Key Responsibilities:
+ * - Manages the lifecycle of named events, including creation, invocation, and cleanup.
+ * - Provides methods to invoke all subscribers of an event, clear events, and check if an event exists or is empty.
+ * - Ensures that event subscriptions (attaching/detaching handlers) are managed exclusively through the `ScopedEventHandler` class.
+ *   Direct access to subscription methods (`AttachToEvent` and `DetachFromEvent`) is restricted to `ScopedEventHandler` via a `friend` relationship.
+ * - Implements a singleton pattern to provide global access to the event management system.
+ * 
+ * Usage:
+ * - Events are created and managed internally by the `EventManager`.
+ * - Subscriptions to events must be performed using the `ScopedEventHandler` class, which ensures proper resource management and automatic detachment of handlers.
+ * - Event invocation and other operations (e.g., clearing events, checking if an event is empty) are performed through public methods of the `EventManager`.
+ * 
+ * Note:
+ * - The `EventManager` relies on a map (`mEventMap`) to store events and their associated delegates.
+ * - Thread safety is not explicitly addressed; care must be taken when using this class in multithreaded environments.
+ */
 using EventManager = Delegate::Details::EventManager;

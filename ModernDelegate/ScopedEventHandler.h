@@ -7,6 +7,7 @@ namespace Delegate
 {
   namespace Details
   {
+
     class ScopedEventHandler
     {
       std::optional<std::int32_t> mCallBackID{};
@@ -77,8 +78,6 @@ namespace Delegate
       [[nodiscard]] inline bool IsInitialized() const { return mCallBackID.has_value(); }
 
 
-
-
     private:
       template <typename... CallbackArgs>
       void AttachImpl(const std::string_view eventName, CallbackArgs&&... args)
@@ -95,4 +94,16 @@ namespace Delegate
 
 } // namespace Delegate
 
+/**
+ * The `ScopedEventHandler` class is responsible for managing event subscriptions in an event-driven system.
+ * 
+ * Key Responsibilities:
+ * - Attaches free functions or member functions to named events via the `EventManager`.
+ * - Ensures automatic detachment of the event handler when the object goes out of scope, preventing resource leaks.
+ * - Uses RAII principles to manage the lifecycle of event subscriptions.
+ * 
+ * Usage:
+ * - Provides a simple interface for attaching and detaching event handlers.
+ * - Automatically detaches the handler in the destructor, ensuring proper cleanup without manual intervention.
+ */
 using ScopedEventHandler = Delegate::Details::ScopedEventHandler;

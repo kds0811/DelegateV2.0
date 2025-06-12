@@ -8,6 +8,14 @@ namespace Delegate
 {
   namespace Details
   {
+    /**
+    * The `BaseDelegate` class serves as an abstract base class for all delegate types.
+    * It provides a common interface for managing event callbacks in the event-driven system.
+    * 
+    * Key Responsibilities:
+    * - Acts as a polymorphic base class for derived `Delegate` templates.
+    * - Ensures that derived classes can be stored in a unified container (e.g., `std::unordered_map`) within the `EventManager`.
+    */
     class BaseDelegate
     {
     public:
@@ -15,6 +23,24 @@ namespace Delegate
       virtual ~BaseDelegate() = default;
     };
 
+
+    /**
+    * The `Delegate` class is a templated implementation responsible for managing event callbacks with specific argument types.
+    * 
+    * Key Responsibilities:
+    * - Stores and manages a collection of callback functions (free functions or member functions) for a specific event.
+    * - Provides methods to attach, detach, invoke, and clear callbacks.
+    * 
+    * Usage:
+    * - Callbacks are identified by unique IDs and stored in an internal map (`mCallBackMap`).
+    * - Free functions or member functions can be attached using the `Attach()` method, which returns a unique ID for later reference.
+    * - All attached callbacks can be invoked using the `InvokeAll()` method with the required arguments.
+    * 
+    * Important Notes:
+    * - Direct creation or management of `Delegate` instances is prohibited. 
+    * - The `EventManager` is responsible for creating, storing, and managing `Delegate` instances, ensuring proper lifecycle management.
+    * - The class supports move semantics but is non-copyable to prevent misuse.
+    */
     template <typename... CallBackArgs>
     class Delegate : public BaseDelegate
     {
