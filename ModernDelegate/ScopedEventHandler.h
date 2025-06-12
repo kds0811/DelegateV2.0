@@ -14,9 +14,21 @@ namespace Delegate
 
     public:
       ScopedEventHandler() {}
+      ScopedEventHandler(const ScopedEventHandler&)                = delete;
+      ScopedEventHandler(ScopedEventHandler&&) noexcept            = delete;
+      ScopedEventHandler& operator=(const ScopedEventHandler&)     = delete;
+      ScopedEventHandler& operator=(ScopedEventHandler&&) noexcept = delete;
+      ~ScopedEventHandler()
+      {
+        if (IsInitialized())
+        {
+          Detach();
+        }
+      }
 
       template <typename... CallbackArgs>
-      explicit ScopedEventHandler(const std::string_view eventName, void (*func)(CallbackArgs...)) : mEventName(eventName)
+      explicit ScopedEventHandler(const std::string_view eventName, void (*func)(CallbackArgs...))
+        : mEventName(eventName)
       {
         AttachImpl(mEventName, func);
       }
@@ -29,7 +41,7 @@ namespace Delegate
       }
 
       template <typename... CallbackArgs>
-      void Attach(const std::string_view eventName, void (*func)(CallbackArgs...)) 
+      void Attach(const std::string_view eventName, void (*func)(CallbackArgs...))
       {
         if (IsInitialized())
           Detach();
@@ -65,13 +77,7 @@ namespace Delegate
       [[nodiscard]] inline bool IsInitialized() const { return mCallBackID.has_value(); }
 
 
-      inline ~ScopedEventHandler()
-      {
-        if (IsInitialized())
-        {
-          Detach();
-        }
-      }
+
 
     private:
       template <typename... CallbackArgs>

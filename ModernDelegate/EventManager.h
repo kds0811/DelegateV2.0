@@ -42,10 +42,10 @@ namespace Delegate
 
     private:
       EventManager() {}
-      EventManager(const EventManager&)                      = delete;
-      EventManager(const EventManager&&) noexcept            = delete;
-      EventManager& operator=(const EventManager&)           = delete;
-      EventManager& operator=(const EventManager&&) noexcept = delete;
+      EventManager(const EventManager&)                = delete;
+      EventManager(EventManager&&) noexcept            = delete;
+      EventManager& operator=(const EventManager&)     = delete;
+      EventManager& operator=(EventManager&&) noexcept = delete;
 
 
       template <typename... CallbackArgs>
@@ -61,7 +61,6 @@ namespace Delegate
 
       template <typename... CallbackArgs>
       [[nodiscard]] Delegate<CallbackArgs...>* GetDelegate(std::string_view eventName);
-
     };
 
     template <typename... CallbackArgs>
